@@ -8,6 +8,9 @@ import (
 	"github.com/go-chi/chi"
 )
 
+type Menu struct {
+}
+
 func NewMenu() *Menu {
 	return &Menu{}
 }
@@ -30,9 +33,6 @@ func (m Menu) Routes() chi.Router {
 	return r
 }
 
-type Menu struct {
-}
-
 func (menu *Menu) Create(w http.ResponseWriter, r *http.Request) {
 	resp := make(map[string]string)
 	resp["message"] = "Status Created"
@@ -44,7 +44,6 @@ func (menu *Menu) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (menu *Menu) GetById(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	resp := make(map[string]string)
 	resp["message"] = "Status Created"
 	jsonResp, err := json.Marshal(resp)
