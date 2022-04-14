@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"onlycakes/controllers"
+	"onlycakes/models"
 	"os"
 
 	"github.com/go-chi/chi"
@@ -14,20 +15,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-type Menu struct {
-	Name      string `gorm:"not null;varchar(255)"`
-	MenuItems []MenuItem
-	gorm.Model
-}
-
-type MenuItem struct {
-	Name   string  `gorm:"not null;varchar(255)"`
-	Price  float32 `gorm:"not null"`
-	Active bool    `gorm:"not null;default:true"`
-	MenuId uint    `gorm:"not null"`
-	gorm.Model
-}
 
 func main() {
 	err := godotenv.Load()
@@ -50,10 +37,15 @@ func main() {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&Menu{})
-	db.AutoMigrate(&MenuItem{})
+	fmt.Println("Running migrations...")
+	db.AutoMigrate(&models.Menu{}, &models.MenuItem{}, &models.MenuItemStep{}, &models.MenuItemStepOption{})
+	fmt.Println("Finished!")
 
-	menuController := controllers.NewMenu()
+	// Setup services
+	menuService := models.NewMenuService(db)
+
+	// Setup controllers
+	menuController := controllers.NewMenuController(menuService)
 
 	r := chi.NewRouter()
 
