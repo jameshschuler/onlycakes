@@ -1,19 +1,13 @@
 package models
 
 import (
-	"errors"
-
 	"gorm.io/gorm"
-)
-
-var (
-	EntityNotFound = errors.New("Entity not found")
 )
 
 type Menu struct {
 	BaseModel
-	Name      string `gorm:"not null;varchar(255)"`
-	MenuItems []MenuItem
+	Name      string     `gorm:"not null;varchar(255)" json:"name"`
+	MenuItems []MenuItem `json:"menuItems"`
 }
 
 type MenuService struct {
@@ -26,17 +20,12 @@ func NewMenuService(db *gorm.DB) *MenuService {
 	}
 }
 
-func (ms *MenuService) GetMenuById(id uint) (*Menu, error) {
+func (ms *MenuService) GetMenuById(id uint64) (*Menu, error) {
 	var menu Menu
-	err := ms.db.First(&menu, id).Error
-
-	switch err {
-	case nil:
-		return &menu, nil
-	case gorm.ErrRecordNotFound:
-		return nil, EntityNotFound
-	default:
+	if err := ms.db.First(&menu, id).Error; err != nil {
 		return nil, err
+	} else {
+		return &menu, nil
 	}
 }
 
