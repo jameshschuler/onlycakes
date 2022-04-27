@@ -7,7 +7,11 @@ import (
 )
 
 type MenuResponse struct {
-	Menu *models.Menu `json:"menu"`
+	Menu models.Menu `json:"menu"`
+}
+
+type MenusResponse struct {
+	Menus []models.Menu `json:"menus"`
 }
 
 type MenuRequest struct {

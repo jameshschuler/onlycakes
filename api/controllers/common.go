@@ -15,11 +15,25 @@ func ErrRender(err error) render.Renderer {
 
 func GetValidationErrorResponse(err error) render.Renderer {
 	if err == nil {
-		return domain.ErrInvalidRequest
+		return &domain.APIErrorResponse{
+			Error: *domain.ErrInvalidRequest,
+		}
 	}
 
-	var errors = []domain.AppError{
+	var errors = []domain.ValidationError{
 		{Message: err.Error()},
 	}
-	return &domain.ErrResponse{HTTPStatusCode: 400, Errors: errors}
+
+	return &domain.APIErrorResponse{
+		Error: domain.ErrResponse{
+			HTTPStatusCode:   400,
+			Message:          "One or more validation errors found",
+			ValidationErrors: errors},
+	}
+}
+
+func GetErrorResponse(err domain.ErrResponse) render.Renderer {
+	return &domain.APIErrorResponse{
+		Error: err,
+	}
 }
