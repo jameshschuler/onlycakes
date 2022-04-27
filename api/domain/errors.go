@@ -11,12 +11,13 @@ var ErrInvalidId = &ErrResponse{HTTPStatusCode: 400, Message: "Invalid Id."}
 var ErrInvalidRequest = &ErrResponse{HTTPStatusCode: 400, Message: "Invalid request."}
 
 type ErrResponse struct {
-	Err            error `json:"-"`          // low-level runtime error
-	HTTPStatusCode int   `json:"statusCode"` // http response status code
+	HTTPStatusCode int        `json:"statusCode"`
+	Message        string     `json:"message,omitempty"`
+	Errors         []AppError `json:"errors,omitempty"`
+}
 
-	Message   string `json:"message,omitempty"` // user-level status message
-	AppCode   int64  `json:"code,omitempty"`    // application-specific error code
-	ErrorText string `json:"error,omitempty"`   // application-level error message, for debugging
+type AppError struct {
+	Message string `json:"message,omitempty"`
 }
 
 func (e *ErrResponse) Render(w http.ResponseWriter, r *http.Request) error {

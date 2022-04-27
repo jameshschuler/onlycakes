@@ -2,8 +2,7 @@ package controllers
 
 import (
 	"context"
-	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"onlycakes/domain"
 	"onlycakes/models"
@@ -32,7 +31,7 @@ func (ctrl MenuController) Routes() chi.Router {
 	//r.Put("/", rs.Delete)
 
 	r.Route("/{id}", func(r chi.Router) {
-		r.Use(ctrl.MenuCtx) // lets have a users map, and lets actually load/manipulate
+		r.Use(ctrl.MenuCtx)
 		r.Get("/", ctrl.GetMenu)
 		//r.Put("/", rs.Update)    // PUT /users/{id} - update a single user by :id
 		//r.Delete("/", rs.Delete) // DELETE /users/{id} - delete a single user by :id
@@ -43,12 +42,13 @@ func (ctrl MenuController) Routes() chi.Router {
 
 func (ctrl *MenuController) MenuCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var menuId uint64
 		var menu *models.Menu
 		var err error
 
 		if id := chi.URLParam(r, "id"); id != "" {
-			menuId, e := strconv.ParseUint(id, 10, 64)
-			if e != nil {
+			menuId, err = strconv.ParseUint(id, 10, 64)
+			if err != nil {
 				resp := &domain.APIResponse[domain.MenuResponse]{
 					Error: domain.ErrInvalidId,
 				}
@@ -57,12 +57,6 @@ func (ctrl *MenuController) MenuCtx(next http.Handler) http.Handler {
 			}
 
 			menu, err = ctrl.menuService.GetMenuById(menuId)
-		} else {
-			resp := &domain.APIResponse[domain.MenuResponse]{
-				Error: domain.ErrNotFound,
-			}
-			render.Render(w, r, resp)
-			return
 		}
 
 		if err != nil {
@@ -81,28 +75,30 @@ func (ctrl *MenuController) MenuCtx(next http.Handler) http.Handler {
 func (ctrl *MenuController) Create(w http.ResponseWriter, r *http.Request) {
 	data := &domain.MenuRequest{}
 	if err := render.Bind(r, data); err != nil {
+		render.Render(w, r, GetValidationErrorResponse(err))
+		return
+	}
+
+	menu := models.Menu{Name: data.Name}
+	err := ctrl.menuService.CreateMenu(&menu)
+	if err != nil {
 		render.Render(w, r, domain.ErrInvalidRequest)
 		return
 	}
 
-	resp := make(map[string]string)
-	resp["message"] = "Status Created"
-	jsonResp, err := json.Marshal(resp)
-	if err != nil {
-		log.Fatalf("Error happened in JSON marshal. Err: %s", err)
-	}
-	w.Write(jsonResp)
+	render.Status(r, http.StatusCreated)
+	w.Header().Set("location", fmt.Sprintf("/menu/%v", menu.ID))
 }
 
 func (ctrl *MenuController) GetMenu(w http.ResponseWriter, r *http.Request) {
 	menu := r.Context().Value("menu").(*models.Menu)
 
+	// TODO: Simplify this?
 	response := &domain.APIResponse[domain.MenuResponse]{
 		Data: &domain.MenuResponse{Menu: menu},
 	}
 
 	if err := render.Render(w, r, response); err != nil {
 		render.Render(w, r, ErrRender(err))
-		return
 	}
 }

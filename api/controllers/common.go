@@ -8,9 +8,18 @@ import (
 
 func ErrRender(err error) render.Renderer {
 	return &domain.ErrResponse{
-		Err:            err,
 		HTTPStatusCode: 422,
 		Message:        "Error rendering response.",
-		ErrorText:      err.Error(),
 	}
+}
+
+func GetValidationErrorResponse(err error) render.Renderer {
+	if err == nil {
+		return domain.ErrInvalidRequest
+	}
+
+	var errors = []domain.AppError{
+		{Message: err.Error()},
+	}
+	return &domain.ErrResponse{HTTPStatusCode: 400, Errors: errors}
 }
