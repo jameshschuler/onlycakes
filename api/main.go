@@ -22,19 +22,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	dbHost := os.Getenv("DB_HOST")
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
-	dbPort := os.Getenv("DB_PORT")
-
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", dbHost, dbUser, dbPassword, dbName, dbPort)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic(err)
-	} else {
-		fmt.Println("Connection successful!")
-	}
+	db := makeDbConnection()
 
 	// Migrate the schema
 	fmt.Println("Running migrations...")
@@ -43,9 +31,11 @@ func main() {
 
 	// Setup services
 	menuService := models.NewMenuService(db)
+	menuItemService := models.NewMenuItemService(db)
 
 	// Setup controllers
 	menuController := controllers.NewMenuController(menuService)
+	menuItemController := controllers.NewMenuItemController(menuItemService, menuService)
 
 	r := chi.NewRouter()
 
@@ -59,7 +49,25 @@ func main() {
 		w.Write([]byte("Hello!"))
 	})
 
-	r.Mount("/menu", menuController.Routes())
+	r.Mount("/api/menu", menuController.Routes())
+	r.Mount("/api/menu/{id}/menuItem", menuItemController.Routes())
 
 	http.ListenAndServe(":8080", r)
+}
+
+func makeDbConnection() *gorm.DB {
+	dbHost := os.Getenv("DB_HOST")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+	dbPort := os.Getenv("DB_PORT")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", dbHost, dbUser, dbPassword, dbName, dbPort)
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic(err)
+	} else {
+		fmt.Println("Connection successful!")
+		return db
+	}
 }

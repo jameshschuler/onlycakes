@@ -6,6 +6,6 @@ import (
 
 type BaseModel struct {
 	ID        uint       `gorm:"primarykey" json:"id"`
-	CreatedAt *time.Time `json:"createdAt"`
-	UpdatedAt *time.Time `json:"updatedAt"`
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty"`
 }

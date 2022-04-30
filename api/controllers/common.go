@@ -31,9 +31,3 @@ func GetValidationErrorResponse(err error) render.Renderer {
 			ValidationErrors: errors},
 	}
 }
-
-func GetErrorResponse(err domain.ErrResponse) render.Renderer {
-	return &domain.APIErrorResponse{
-		Error: err,
-	}
-}
